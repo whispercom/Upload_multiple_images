@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="email=no" />
+    <meta name="screen-orientation" content="portrait" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="full-screen" content="yes">
+    <meta name="x5-fullscreen" content="true">
+    <title>上傳多張圖片的功能</title>
+    <script>
+        (function (doc, win) {
+            var docEl = doc.documentElement,
+                resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+                recalc = function () {
+                    var clientWidth = docEl.clientWidth;
+                    if (!clientWidth) return;
+                    if (clientWidth > 640) clientWidth = 640;
+                    docEl.style.fontSize = 100 * (clientWidth / 640) + 'px';
+                };
+            if (!doc.addEventListener) return;
+            win.addEventListener(resizeEvt, recalc, false);
+            recalc();
+        })(document, window);
+    </script>
+    <link rel="stylesheet" href="http://cdn.ulandian.com/src/css/reset.css">
+    <style>
+        body {
+            position: relative;
+            min-height: 100vh;
+            background: #f2f2f2;
+            padding-bottom: .8rem;
+        }
+
+        .container {
+            position: relative;
+            min-width: 3.2rem;
+            width: 6.4rem;
+            max-width: 7.5rem;
+            margin: 0 auto;
+            overflow: hidden;
+            font-size: .24rem;
+            color: #333;
+        }
+
+        input,
+        textarea {
+            outline: none;
+        }
+
+        textarea {
+            -webkit-appearance: none;
+            -webkit-user-select: text;
+        }
+
+        a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .mt-10 {
+            margin-top: .1rem;
+        }
+
+        .fx-grow {
+            -webkit-box-flex: 1;
+            -webkit-flex-grow: 1;
+            flex-grow: 1;
+        }
+
+        /* showAlert begin */
+        .alert {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 999;
+            background: rgba(0, 0, 0, .6);
+            font-size: .24rem;
+        }
+
+        .alert>.wrap {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            width: 5rem;
+            background: #fff;
+            border-radius: .1rem;
+            color: #333;
+        }
+
+        .alert h3 {
+            line-height: 1em;
+            font-weight: normal;
+            font-size: .36rem;
+            text-align: center;
+            margin: .3rem 0 .5rem;
+        }
+
+        .alert p {
+            font-size: .24rem;
+            margin-bottom: .4rem;
+            text-align: center;
+            line-height: 1em;
+            padding: 0 2em;
+            line-height: 1.2em;
+        }
+
+        .alert .btn_group {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            width: 100%;
+            height: .78rem;
+            border-top: .01rem solid #ccc;
+        }
+
+        .alert a {
+            position: relative;
+            display: inline-block;
+            width: 50%;
+            text-align: center;
+            line-height: .78rem;
+            color: #333;
+            text-decoration: none;
+            -webkit-box-flex: 1;
+            -webkit-flex-grow: 1;
+            flex-grow: 1;
+        }
+
+        .alert .cancel:after {
+            content: '';
+            position: absolute;
+            top: .14rem;
+            right: 0;
+            width: 0;
+            height: .5rem;
+            border-right: .01rem solid #ccc;
+        }
+
+        .alert .sure {
+            color: #11a1ff;
+        }
+
+        .gray {
+            color: #999;
+        }
+
+        /* showAlert end */
+        
+    </style>
+</head>
+
+<body>
+    
+    <div id="showAlert" class="alert">
+        <div class="wrap">
+            <h3 class="title">提示</h3>
+            <p class="content">内容</p>
+            <div class="btn_group">
+                <a href="javascript:;" class="cancel">取消</a>
+                <a href="javascript:;" class="sure">确定</a>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="http://cdn.ulandian.com/src/js/jquery-3.2.0.min.js"></script>
+    <script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="http://cdn.ulandian.com/src/js/fastclick.js"></script>
+    <script src="http://cdn.ulandian.com/src/js/bscroll.min.js"></script>
+    <script>
+    
+    </script>
+</body>
+
+</html>

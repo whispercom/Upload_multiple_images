@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="email=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="defalult" />
+    <meta name="author" content="Landian-xx" />
+    <title>我的快递</title>
+    <script>
+        (function(doc, win) {
+        var docEl = doc.documentElement,
+          resizeEvt =
+            "orientationchange" in window ? "orientationchange" : "resize",
+          recalc = function() {
+            var clientWidth = docEl.clientWidth;
+            if (!clientWidth) return;
+            if (clientWidth > 640) clientWidth = 640;
+            docEl.style.fontSize = 100 * (clientWidth / 640) + "px";
+          };
+        if (!doc.addEventListener) return;
+        win.addEventListener(resizeEvt, recalc, false);
+        recalc();
+      })(document, window);
+    </script>
+    <!-- build:css ../resources/css/app.min.css -->
+    <link rel="stylesheet" type="text/css" href="../resources/css/receiverServer.css?v=201811141" />
+    <script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script type="text/javascript" src="../resources/js/jquery-1.11.3.min.js"></script>
+    <!--
+      <script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    -->
+    <!-- endbuild -->
+    <style>
+        .icon-location {
+        width: 0.3rem;
+        height: 0.3rem;
+        vertical-align: text-bottom;
+        display: inline-block;
+        background: url("http://resource.ulandian.com/mylandian/express/aui-icon-location.png?v=1")
+          no-repeat left center/100%;
+      }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        <div class="topNav padding">
+            <div class="fl">
+                <img src="http://cdn.ulandian.com/mylandian/express/topLogo.jpg" alt="" />
+            </div>
+            <div class="fr">
+                <span id="change">改绑手机</span><span id="other">其他手机取件</span>
+            </div>
+        </div>
+        <div class="adv">
+            <img src="http://cdn.ulandian.com/mylandian/express/youxuan20181109145702.png" alt="" />
+            <div class="close"></div>
+        </div>
+        <div id="nav">
+            <ul>
+                <li id="currentBtn" class="actived">在店未取</li>
+                <li id="waitBtn">配送件</li>
+                <li id="historyBtn">历史记录</li>
+            </ul>
+        </div>
+    </div>
+    <div id="content">
+        <div id="currentRecord" class="padding">
+            <div id="currentList" class="listDiv"></div>
+            <div class="loading">
+                <img src="../resources/images/loading.gif" alt="" />
+            </div>
+            <div id="currentNoRecord" class="blank">
+                <img src="../resources/images/blank.png" alt="" />
+                <p>暂时没有你的未取记录</p>
+            </div>
+            <div id="curMore" class="more">点击加载更多</div>
+            <div class="nomore">已全部加载完成</div>
+        </div>
+        <div id="waitRecord" class="padding">
+            <div id="waitList" class="listDiv"></div>
+            <div class="loading">
+                <img src="../resources/images/loading.gif" alt="" />
+            </div>
+            <div id="waitNoRecord" class="blank">
+                <img src="../resources/images/blank.png" alt="" />
+                <p>您当前没有待配送快件<br />此项服务目前只在部分区域开通</p>
+            </div>
+            <div id="waitMore" class="more">点击加载更多</div>
+            <div class="nomore">已全部加载完成</div>
+        </div>
+        <div id="historyRecord" class="padding">
+            <div id="hisList" class="listDiv"></div>
+            <div class="loading">
+                <img src="../resources/images/loading.gif" alt="" />
+            </div>
+            <div id="hisNoRecord" class="blank">
+                <img src="../resources/images/blank.png" alt="" />
+                <p>暂时没有你的历史记录</p>
+            </div>
+            <div id="hisMore" class="more">点击加载更多</div>
+            <div class="nomore">已全部加载完成</div>
+        </div>
+    </div>
+
+    <div class="footer-fixed">
+        <div class="send_express">我要寄件</div>
+        <div class="advice">投诉建议</div>
+    </div>
+
+    <!-- 投诉建议弹出框 -->
+    <div class="suggestion-wrapper">
+        <div class="inner_suggestionbox">
+            <p class="titile">请选择您要反馈的问题类型</p>
+            <div class="questions_types">
+                <!-- <span data-tagid='id1'>我的建议1</span> -->
+            </div>
+            <div class="sugg_instrucontent"></div>
+            <textarea id="textaContent" name="consContent" placeholder="如您反馈的内容中包含有蓝店网点或个人，请您具体描述，以便我们工作更好的落实"></textarea>
+            <span class="img_titile">添加图片（选填）</span>
+            <div class="select_questionimg">
+                <!--
+                    <div class="img_box">
+                        <img class="source_img" src="http://cdn.ulandian.com/mylandian/express/sugaddImg.png" alt="">
+                        <img class="close_img" src="http://cdn.ulandian.com/mylandian/express/sugclose.png" alt="">
+                    </div>
+                -->
+                <div class="new_img_box" id="img_add_box">
+                    <img class="add_img" src="http://cdn.ulandian.com/mylandian/express/sugaddImg.png" alt="" />
+                    <input type="file" class="add_img_out" id="addImgOut" accept="image/*" multiple name="storePhotoOut" />
+                </div>
+            </div>
+        </div>
+        <div class="suggestion_bottom">
+            <button id="suggestion_submit">匿名提交</button>
+            <span>感谢您的反馈，我们将尽快回复</span>
+            <span>客服热线：<a style="text-decoration: underline;" href="tel:4000301615">400-030-1615</a></span>
+            <p class="closebtn">关闭</p>
+        </div>
+
+    </div>
+
+    <div id="dialogWrapper"></div>
+    <div id="changeNumber" class="dialogCon">
+        <div class="header">
+            <p class="title">更改绑定手机号码</p>
+            <p>
+                当前绑定：<span class="curMobile"></span>
+                <br />温馨提醒：改绑后，当前手机号的快件将不会在微信上收到取件提醒
+            </p>
+        </div>
+        <form action="">
+            <input type="tel" name="telephone" id="reBindMobile" value="" placeholder="请输入您的手机号码" />
+            <input type="tel" name="checkNumber" value="" placeholder="验证码" id="reBindCode" /><span id="reBindSpan"><button
+                    type="button" name="getCheckNumber" id="reBindBtn">
+                    获取验证码
+                </button></span>
+            <p class="alert">手机号码输入错误</p>
+            <button type="button" name="submit" onclick="submitCheckCode(1);">
+                完成
+            </button>
+        </form>
+    </div>
+    <div id="otherNumber" class="dialogCon">
+        <div class="header">
+            <p class="title">查询其他手机号码快递</p>
+            <p>当前绑定：<span class="curMobile"></span></p>
+        </div>
+        <form onsubmit="return false">
+            <input type="tel" name="telephone" id="otherMobile" value="" placeholder="请输入要查询的手机号码" />
+            <input type="tel" name="checkNumber" value="" placeholder="验证码" id="otherCode" /><span id="otherSpan"><button
+                    type="button" name="getCheckNumber" id="otherBtn">
+                    获取验证码
+                </button></span>
+            <p class="alert">验证码输入错误</p>
+            <button type="button" name="submit" onclick="submitCheckCode(2);">
+                下一步
+            </button>
+        </form>
+    </div>
+    <div class="show-code">
+        <div class="code-wraper">
+            <div class="code"></div>
+            <span>请将此二维码给网点出示</span>
+        </div>
+    </div>
+    <div class="guide"></div>
+    <div class="tips">
+        <div class="wrap">
+            <h3>提示</h3>
+            <p>取消配送请致电蓝店客服</p>
+            <p>客服电话：4000301615</p>
+            <div class="btn_group">
+                <a href="javascript:;" class="cancel">取消</a>
+                <a href="tel:4000301615" class="call">立即致电</a>
+            </div>
+        </div>
+    </div>
+    <div class="show_tip" id="showTip">
+        <div class="wrap">
+            <h3>提示</h3>
+            <p>取消配送请致电蓝店客服</p>
+            <div class="btn_group">
+                <a href="javascript:;" class="sure">确定</a>
+            </div>
+        </div>
+    </div>
+    <!-- 投诉意见的加载层 -->
+    <div class="loading_container">
+        <div class="sug_loading">
+            <div class="lds-spinner" style="width:100%;height:100%">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="../resources/js/receiverServer.js?v=201802031236"></script>
+<script src="../resources/js/browseStatistics.js"></script>
+<script type="text/javascript" src="../resources/js/advConfig.js"></script>
+<script src="http://cdn.ulandian.com/src/js/base64.min.js"></script>
+<script type="text/javascript">
+    var openId = getUrlParams("openId");
+    var mobile = getUrlParams("mobile");
+    var token = getUrlParams("token");
+    var noncestr = getUrlParams("noncestr");
+    var timestamp = getUrlParams("timestamp");
+    var zoneId = getUrlParams("zoneId");
+    var type = getUrlParams("type");
+    var queryOther = 0;
+    var pageNum = 1;
+    var $loading = $(".loading_container");
+    var typeTags = '';
+    var dataArr = []; // 储存所选图片的结果(文件名和base64数据)
+    var filenameArr=[];
+    var submitLock=false;
+    $("#mobile").val(mobile);
+    if (!zoneId) {
+        zoneId = 17;
+    }
+
+    $(document).ready(function () {
+        $(".curMobile").html(mobile);
+        if (type == 2) {
+            $("#currentList").html("");
+            $("#hisList").html("");
+            $("#waitList").html("");
+            $(".nomore").hide();
+            getExpressList(openId, 2, pageNum);
+            hisBtn
+                .addClass("actived")
+                .siblings()
+                .removeClass("actived");
+            cur.hide();
+            wait.hide();
+            his.show();
+        } else if (type == 3) {
+            $("#currentList").html("");
+            $("#waitList").html("");
+            $("#hisList").html("");
+            $(".nomore").hide();
+            getDeliveryOrder(openId, pageNum);
+            waitBtn
+                .addClass("actived")
+                .siblings()
+                .removeClass("actived");
+            cur.hide();
+            his.hide();
+            wait.show();
+        } else {
+            getExpressList(openId, 1, pageNum);
+        }
+    });
+
+    // localStorage.clear('send_express_guide');
+    if (!localStorage.getItem("send_express_guide")) {
+        //寄件预约引导
+        $(".guide").css("display", "block");
+    }
+    $(".guide").on("click", function () {
+        $(this).css("display", "none");
+        localStorage.setItem("send_express_guide", "1");
+    });
+    $(".guide").bind("touchmove", function (e) {
+        e.preventDefault();
+    });
+    $(".adv-wrapper .close").on("click", function () {
+        $(".adv-wrapper").hide();
+    });
+
+   
+
+    // 展示tag标签
+    function showTags() {
+        $.ajax({
+            // url:'http://192.168.1.33:8080/bluestore_v2.0/weixin/comment/tags/getCommentTagsByType.htm?useType=1',
+            url: 'http://sh.ulandian.com/weixin/comment/tags/getAllCommentTags.htm?useType=1',
+            type: "GET",
+            data: {
+            },
+            success: function (data) {
+                if (data.status == 200) {
+                    var htmTag = '';
+                    for (var i = 0, alens = data.rows.length; i < alens; i++) {
+                        var rowData = data.rows[i];
+                        htmTag += '<span data-tagid=' + rowData.id + ' data-tdetail='+rowData.tagsDetail+'>' + rowData.tagsName + '</span>';
+                    }
+                    $('.questions_types').append(htmTag);
+
+                    // 点击投诉建议
+                    $(".advice").click(function () {
+                        $(".suggestion-wrapper").show();
+                        $("textarea").val("");
+                        typeTags='';
+                        dataArr=[];
+                        filenameArr=[];
+                        $('.img_box').hide();
+                        $(".questions_types span").removeClass("type_active");
+                        $('.sugg_instrucontent').html('');
+                    });
+
+                     // 单选点击标签
+                     var instructionHtm='';
+                     $(".questions_types span").each(function (i, v) {
+                        $(this).click(function () {
+                            $(this).siblings().removeClass('type_active');
+                            if ($(this).hasClass("type_active")) {
+                                $(this).removeClass("type_active");
+                                typeTags='';
+                                $('.sugg_instrucontent').html('');
+                            } else {
+                                $(this).addClass("type_active");
+                                typeTags=$(this).data('tagid');
+                                console.log('tadetail',$(this).data('tdetail'))
+                                if($(this).data('tdetail')!=''){
+                                    instructionHtm='<p class="sugg_instruction">'+$(this).data('tdetail')+'</p>';
+                                    
+                                }else{
+                                    instructionHtm='';
+                                }
+                                $('.sugg_instrucontent').html(instructionHtm);
+                            }
+                            // console.log("当前单选的是：", typeTags);
+                        });
+                    });
+                    
+                } else {
+                    $('.show_tip').css('z-index',1000);
+                    showTip('获取参数错误，请稍后重试！', '确定');
+                }
+            },
+            error: function () {
+                $('.show_tip').css('z-index',1000)
+                showTip('系统错误，请稍后重试！', '确定');
+            }
+        });
+    }
+    showTags();
+    
+    
+    // 点击选择图片
+    $(".add_img").click(function () {
+        $(this).next().click();
+    });
+    // 监听选择图片
+    $("#addImgOut").on("change", function () {
+        var fl = this.files.length;
+        var htmlStr = "";
+        var indexs = 0;
+        for (var i = 0; i < fl; i++) {
+            var file = this.files[i];
+            var reader = new FileReader();
+            reader.indexs = i;
+            reader.readAsDataURL(file);
+            reader.fileName = file.name;
+            reader.onload = function (e) {
+                if(dataArr.indexOf(e.target.result)==-1){
+                    htmlStr =
+                    '<div class="img_box"><img class="source_img" src="' +
+                    e.target.result +
+                    '" alt=""><img class="close_img" data-baseimg='+e.target.result+' src="http://cdn.ulandian.com/mylandian/express/sugclose.png" alt=""></div>';
+                    $(".select_questionimg").prepend(htmlStr);
+                    var divs = document.getElementsByClassName("close_img")[0];
+                    divs["indexs"] = indexs;
+                    
+                    filenameArr.push(this.fileName);
+                    dataArr.push(e.target.result);
+                }
+                // console.log(filenameArr)
+
+                $(".close_img").on("click", function () {
+                    console.log(this.indexs);
+                    $(this).parent().remove();
+                    var idx = dataArr.indexOf($(this).data('baseimg'));
+                    if (idx > -1) {
+                        dataArr.splice(idx, 1);
+                        filenameArr.splice(idx, 1);
+                    }
+                });
+                indexs++;
+            };
+        }
+    });
+
+    // 提交建议
+    $("#suggestion_submit").on("click", function () {
+        subShops();
+    });
+    function subShops() {
+        console.log(textareaValue,tagIds,imgs,'标签',typeTags,'图片',dataArr,'路径',filenameArr);
+        if(submitLock) return;
+         if(typeTags==''){
+            $('.show_tip').css('z-index',1000)
+            showTip('请选择您要反馈的问题类型', '确定');
+            return false;
+        }
+        if (!$("#textaContent").val().length) {
+            $('.show_tip').css('z-index',1000)
+            showTip('反馈信息不能为空', '确定');
+            return false;
+        }
+        $loading.fadeIn("fast");
+        var formData = new FormData();
+        submitLock=true;
+        var textareaValue=$("#textaContent").val();
+        var tagIds=typeTags;
+        var imgs='';
+        // console.log('当前需要提交的东西',textareaValue,tagIds,imgs,'标签',typeTags,'图片',dataArr);
+        if(dataArr.length>0){
+          imgs=dataArr.join('@');
+        }
+        var formData=new FormData();
+        formData.append("mobile", mobile);
+        formData.append("consContent", textareaValue);
+        formData.append("tagIds", tagIds);
+        formData.append("img", imgs);
+        $.ajax({
+            //  url:'http://192.168.1.33:8080/bluestore_v2.0/app/user/addFeedbackFromWx.htm',
+            url:'http://sh.ulandian.com/app/user/addFeedbackFromWx.htm',
+            type: "POST",
+            data:formData,
+            cache:false,
+            contentType:false,
+            processData:false,
+            success:function(data){
+              if(data.status==200){
+                submitLock=false;
+                $loading.fadeOut("fast");
+                showTip("提交成功，感谢您的反馈", "确定");
+                $(".suggestion-wrapper").hide();
+              }else{
+                submitLock=false;
+                $loading.fadeOut("fast");
+                $('.show_tip').css('z-index',1000);
+                showTip('获取参数错误，请稍后重试！', '确定');
+              }  
+            },
+            error:function(errors){
+                submitLock=false;
+                $loading.fadeOut("fast");
+                $('.show_tip').css('z-index',1000);
+                showTip(
+                    '图片大小超过30M上传失败。建议您对图片进行适当剪裁',
+                    "确定"
+                );
+            }
+         });
+        
+    }
+
+    $(".send_express").click(function () {
+        $.ajax({
+            url: "http://sh.ulandian.com/weixin/mylandian/getMyLanDianTotalClick.htm",
+            type: "POST",
+            cache: false,
+            data: {
+                clickModuleId: 9,
+                clickObjectId: 1
+            },
+            success: function () {
+                window.location.href =
+                    "./send_express.html?mobile=" +
+                    mobile +
+                    "&cityId=" +
+                    zoneId +
+                    "&openId=" +
+                    openId +
+                    "&time=" +
+                    new Date().valueOf();
+            },
+            error: function () {
+                // showTip('系统错误，请稍后重试！', '确定');
+            }
+        });
+    });
+    // 点击投诉意见中的关闭按钮
+    $(".closebtn").click(function () {
+        $(".suggestion-wrapper").hide();
+        return false;
+    });
+    $(".listDiv").on("click", ".get-code", function () {
+        var checkCode = $(this).attr("data-code");
+        $(".show-code .code").html(
+            '<img src="http://www.ulandian.com/weixin-ser/GeneQrcodeServlet?checkCode=' +
+            checkCode +
+            '" alt="">'
+        );
+        $(".show-code").fadeIn("fast");
+        return false;
+    });
+    $(".show-code").click(function () {
+        $(this).hide();
+        return false;
+    });
+    $("#content").on("click", ".collapse-btn", function () {
+        $(this)
+            .parents(".item")
+            .siblings(".item")
+            .removeClass("open")
+            .end()
+            .toggleClass("open");
+        return false;
+    });
+    $("#waitList").on("click", ".cancel_send", function (e) {
+        //取消送货上门服务弹窗
+        e.preventDefault();
+        $(".tips").fadeIn("fast");
+    });
+    $(".tips").on("click", ".cancel", function () {
+        //点击取消，送货上门服务弹窗隐藏
+        $(".tips").hide();
+    });
+    $("#waitList").on("click", ".detail", function () {
+        //配送件详情
+        var sn = $(this).attr("data-id");
+        window.location.href =
+            "http://sh.ulandian.com/html/mylandian/express/express_confirmV2.html?openId=" +
+            openId +
+            "&sn=" +
+            sn +
+            "&zoneId=" +
+            zoneId;
+    });
+    $(".adv").on("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href =
+            "https://h5.youzan.com/v2/goods/2xgl0816xm211?dc_ps=2121571946020856835.200001";
+    });
+    $(".adv .close").on("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(".adv").addClass("height0");
+        $("#content").addClass("normal");
+    });
+
+    var curMoreBtn = $("#curMore");
+    curMoreBtn.click(function () {
+        if (queryOther == 1) {
+            getExpressList($("#otherMobile").val(), 1, pageNum);
+        } else {
+            getExpressList(openId, 1, pageNum);
+        }
+    });
+    var hisMoreBtn = $("#hisMore");
+    hisMoreBtn.click(function () {
+        if (queryOther == 1) {
+            getExpressList($("#otherMobile").val(), 2, pageNum);
+        } else {
+            getExpressList(openId, 2, pageNum);
+        }
+    });
+    var waitMoreBtn = $("#waitMore");
+    waitMoreBtn.click(function () {
+        if (queryOther == 1) {
+            getDeliveryOrder($("#otherMobile").val(), pageNum);
+        } else {
+            getDeliveryOrder(openId, pageNum);
+        }
+    });
+
+    $(".listDiv").on("click", ".site-point", function () {
+        var latitude = $(this).data("lati"),
+            longitude = $(this).data("longt"),
+            nickname = $(this).data("nickname"),
+            code = $(this).data("code"),
+            mobile = $(this).data("mobile"),
+            icon = $(this).data("iconurl"),
+            address = $(this).data("address");
+        console.log(latitude);
+        if (!latitude || latitude == "undefined" || latitude == "null") {
+            showTip("获取不到网点位置", "确定");
+            return;
+        } else {
+            window.location.href =
+                "http://sh.ulandian.com/html/mylandian/express/site_address.html?latitude=" +
+                latitude +
+                "&longitude=" +
+                longitude +
+                "&nickname=" +
+                nickname +
+                "&icon=" +
+                icon +
+                "&address=" +
+                address +
+                "&mobile=" +
+                mobile +
+                "&code=" +
+                code;
+        }
+    });
+
+    function getDeliveryOrder(openId, num) {
+        $(".loading").removeClass("close");
+        $(".more").hide();
+        $.ajax({
+            // url: 'http://sh.ulandian.com/weixin/mylandian/d2d/v2/findPage.htm',
+            url: "http://sh.ulandian.com/weixin/mylandian/d2d/v3/findPage.htm",
+            type: "GET",
+            data: {
+                wxOpenId: openId,
+                mobile: mobile,
+                pageNum: num
+            },
+            success: function (data) {
+                var obj = data;
+                var datas = obj.data;
+                console.log(obj);
+                if (obj.status == 200) {
+                    if (datas.length <= 0) {
+                        if (num == 1) {
+                            $("#waitNoRecord.blank").show();
+                            $(".more").hide();
+                            // $('.nomore').hide();
+                        } else {
+                            $("#waitMore").hide();
+                            $(".nomore").show();
+                        }
+                    } else {
+                        $(".blank").hide();
+                        $(".more").show();
+                        var html = "";
+
+                        for (var i = 0; i < datas.length; i++) {
+                            var expressRstr = "";
+                            for (var q = 0; q < datas[i].expressInfo.length; q++) {
+                                expressRstr +=
+                                    datas[i].expressInfo[q].split("@")[0] +
+                                    " " +
+                                    datas[i].expressInfo[q].split("@")[1] +
+                                    " ";
+                            }
+                            // 达达订单
+                            if (datas[i].orderType == 1) {
+                                html += '<div class="item padding">';
+                                html +=
+                                    '<a class="links_a" href="http://sh.ulandian.com/html/mylandian/express/order_details.html?orderNo=' +
+                                    datas[i].orderNo +
+                                    "&openId=" +
+                                    openId +
+                                    "&zoneId=" +
+                                    zoneId +
+                                    "&mobile=" +
+                                    mobile +
+                                    "&expressNo=" +
+                                    datas[i].expressInfo[0].split("@")[1] +
+                                    "&userId=" +
+                                    datas[i].userId +
+                                    "&dadaAgentCode=" +
+                                    datas[i].agentCode +
+                                    '">';
+                                html +=
+                                    '<h3 style="font-size: .28rem;font-weight: 600;border-bottom: none;font-weight: normal;margin-top:.08rem;">' +
+                                    datas[i].nickname;
+                                if (datas[i].dadaOrderStatus == 1) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">待接单</span>';
+                                } else if (datas[i].dadaOrderStatus == 2) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">待取货</span>';
+                                } else if (datas[i].dadaOrderStatus == 3) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">配送中</span>';
+                                } else if (datas[i].dadaOrderStatus == 4) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">已完成</span>';
+                                } else if (datas[i].dadaOrderStatus == 5) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">已取消</span>';
+                                } else if (datas[i].dadaOrderStatus == 7) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">已过期</span>';
+                                } else if (datas[i].dadaOrderStatus == 8) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">指派单</span>';
+                                } else if (datas[i].dadaOrderStatus == 9) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">订单未完成-无法联系到收件人</span>';
+                                } else if (datas[i].dadaOrderStatus == 10) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">订单未完成-无法联系到收件人</span>';
+                                } else if (datas[i].dadaOrderStatus == 1000) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">创建达达运单失败</span>';
+                                }
+
+                                html += "</h3>";
+                                html +=
+                                    '<ul class="wait_ul bottom_line"><li class="li_flex">';
+                                html +=
+                                    '<span class="cut_widths">快件：' + expressRstr + "</span>";
+                                html +=
+                                    "<span> 共" +
+                                    datas[i].expressInfo.length +
+                                    "件</span></li>";
+                                if (datas[i].note != "") {
+                                    html += "<li>代买：" + datas[i].note + "</li>";
+                                } else {
+                                    html += "<li>代买：暂无</li>";
+                                }
+
+                                html += "</ul>";
+                                html += '<ul class="wait_ul bottom_line">';
+                                if (
+                                    datas[i].dadaOrderStatus != 1 &&
+                                    datas[i].dadaOrderStatus != 1000 &&
+                                    datas[i].dadaDeliverName != ""
+                                ) {
+                                    html +=
+                                        '<li class="color_gray">配送人员：' +
+                                        datas[i].dadaDeliverName +
+                                        "</li>";
+                                } else {
+                                    html += '<li class="color_gray">配送人员：暂无</li>';
+                                }
+
+                                html +=
+                                    '<li class="color_gray">预约时间：' +
+                                    timestampToTime(datas[i].createTime) +
+                                    ' <span class="abright"><span id="count_sums">合计：<small>￥</small>' +
+                                    datas[i].totalFee +
+                                    "</span></span></li></ul>";
+                                html += "</a>";
+                                html += '<div class="wait_bottoms">';
+                                if (
+                                    datas[i].dadaOrderStatus != 1 &&
+                                    datas[i].dadaOrderStatus != 1000 &&
+                                    datas[i].dadaDeliverMobile != ""
+                                ) {
+                                    html +=
+                                        '<a class="connect_deliver " href="tel:' +
+                                        datas[i].dadaDeliverMobile +
+                                        '">联系配送员</a>';
+                                }
+                                html +=
+                                    '<a class="connect_sh " href="tel:' +
+                                    datas[i].mobile +
+                                    '">联系商户</a></div>';
+                                html += "</div>";
+                            }
+                            // 商家订单
+                            else {
+                                html += '<div class="item padding">';
+                                html +=
+                                    '<a class="links_a" href="http://sh.ulandian.com/html/mylandian/express/order_details.html?orderNo=' +
+                                    datas[i].orderNo +
+                                    "&openId=" +
+                                    openId +
+                                    "&zoneId=" +
+                                    zoneId +
+                                    "&mobile=" +
+                                    mobile +
+                                    '">';
+                                html +=
+                                    '<h3 style="font-size: .28rem;font-weight: 600;border-bottom: none;font-weight: normal;margin-top:.08rem;">' +
+                                    datas[i].nickname;
+                                if (datas[i].orderStatus == 0) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">待付款</span>';
+                                } else if (datas[i].orderStatus == 1) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">待配送</span>';
+                                } else if (datas[i].orderStatus == 2) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">配送中</span>';
+                                } else if (datas[i].orderStatus == 3) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">已配送</span>';
+                                } else if (datas[i].orderStatus == 4) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">待确认</span>';
+                                } else if (datas[i].orderStatus == 5) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">确认失败</span>';
+                                } else if (datas[i].orderStatus == 9) {
+                                    html +=
+                                        '<span class="abright color_blue" style="font-size:.24rem;font-weight:normal;">已取消</span>';
+                                }
+                                html += "</h3>";
+                                html +=
+                                    '<ul class="wait_ul bottom_line"><li class="li_flex">';
+                                html +=
+                                    '<span class="cut_widths">快件：' + expressRstr + "</span>";
+                                html +=
+                                    "<span> 共" +
+                                    datas[i].expressInfo.length +
+                                    "件</span></li>";
+                                if (datas[i].note != "") {
+                                    html += "<li>代买：" + datas[i].note + "</li>";
+                                } else {
+                                    html += "<li>代买：暂无</li>";
+                                }
+
+                                html += "</ul>";
+                                html +=
+                                    '<ul class="wait_ul bottom_line"><li class="color_gray">配送人员：' +
+                                    "店主配送" +
+                                    '</li><li class="color_gray">预约时间：' +
+                                    timestampToTime(datas[i].createTime) +
+                                    ' <span class="abright"><span id="count_sums">合计：<small>￥</small>' +
+                                    datas[i].totalFee +
+                                    "</span></span></li></ul>";
+                                html += "</a>";
+                                html +=
+                                    '<div class="wait_bottoms"><a class="connect_sh " href="tel:' +
+                                    datas[i].mobile +
+                                    '">联系商户</a></div>';
+                                html += "</div>";
+                            }
+                        }
+                        $("#waitList").append(html);
+
+                        if (datas.length < 5) {
+                            $("#waitMore").hide();
+                            $(".nomore").show();
+                        }
+                    }
+                }
+                $(".loading").addClass("close");
+                pageNum = obj.pageNum;
+            },
+            error: function () {
+                $(".loading").addClass("close");
+            }
+        });
+    }
+
+    function getExpressList(openIdOrMobile, type, num) {
+        $(".loading").removeClass("close");
+        $(".more").hide();
+        if (type == 3) {} else {
+            $.ajax({
+                url: "http://sh.ulandian.com/weixin/express/v2/getExpressList4WxClient.htm",
+                type: "GET",
+                data: {
+                    openIdOrMobile: openIdOrMobile,
+                    type: type,
+                    pageNum: num
+                },
+                success: function (data, textStatus) {
+                    if (data != null && data != "") {
+                        // console.log(data);
+                        var obj = data;
+                        if (obj.status == 500) {
+                            $("#currentNoRecord").show();
+                            $(".more").hide();
+                            showTip(obj.info, "确定");
+                        } else if (obj.status == 200) {
+                            var datas = obj.rows;
+                            if (datas.length <= 0) {
+                                //没有记录
+                                if (num == 1) {
+                                    //第一页就没有记录，表示没有记录
+                                    $(".blank").show();
+                                    $(".more").hide();
+                                } else {
+                                    //非首页没有记录，表示记录翻完了
+                                    if (type == 1) {
+                                        $("#curMore").hide();
+                                        $(".nomore").show();
+                                    } else if (type == 2) {
+                                        $("#hisMore").hide();
+                                        $(".nomore").show();
+                                    } else {
+                                        $("#waitMore").hide();
+                                        $(".nomore").show();
+                                    }
+                                }
+                            } else {
+                                $(".blank").hide();
+                                $(".more").show();
+                                var html = "";
+                                for (var i = 0; i < datas.length; i++) {
+                                    if (type == 2) {
+                                        html += '<div class="item history padding">';
+                                        html +=
+                                            "<h3>" +
+                                            datas[i].nickName +
+                                            '<a href="http://sh.ulandian.com/html/mylandian/comment/comment.html?openId=' +
+                                            getUrlParams("openId") +
+                                            "&iconUrl=" +
+                                            datas[i].iconUrl +
+                                            "&expressNo=" +
+                                            datas[i].expressNo +
+                                            "&userId=" +
+                                            datas[i].userId +
+                                            "&nickname=" +
+                                            datas[i].nickName +
+                                            "&mobile=" +
+                                            datas[i].telephone +
+                                            "&createDate=" +
+                                            datas[i].receiveDate +
+                                            "&address=" +
+                                            datas[i].address4message +
+                                            "&partnerName=" +
+                                            datas[i].partnerName +
+                                            '">服务评价</a></h3>';
+                                        html += "<ul>";
+                                        html +=
+                                            '<li><span class="justify">取件码</span><strong>： ' +
+                                            datas[i].checkCode.toString() +
+                                            '</strong><a class="underline" href="javascript:;">' +
+                                            doorStatus(datas[i].doorStatus) +
+                                            "</a></li>";
+                                        html +=
+                                            '<li><span class="justify">快递公司</span>： ' +
+                                            datas[i].partnerName +
+                                            "</li>";
+                                        html +=
+                                            '<li><span class="justify">快递单号</span>： ' +
+                                            datas[i].expressNo +
+                                            "</li>";
+                                    } else if (type == 1) {
+                                        html += '<div class="item padding">';
+                                        html +=
+                                            "<h3>" +
+                                            datas[i].partnerName +
+                                            '<span style="color:#999;display:inline-block;padding-left: 10px;">' +
+                                            datas[i].expressNo +
+                                            '<button type="button" class="collapse-btn"></button></h3>';
+                                        html += "<ul>";
+                                    } else if (type == 3) {
+                                        html += '<div class="item padding">';
+                                        html +=
+                                            "<h3>" +
+                                            datas[i].partnerName +
+                                            '<span style="color:#999;display:inline-block;padding-left: 10px;">' +
+                                            datas[i].expressNo +
+                                            '<span class="abright" style="color:#333;font-size:.24rem;">' +
+                                            doorStatus(datas[i].doorStatus) +
+                                            "</span></h3>";
+                                        html += "<ul>";
+                                    }
+
+                                    if (type == 1) {
+                                        html +=
+                                            '<li><span class="justify">取件码</span>： <strong>' +
+                                            datas[i].checkCode.toString() +
+                                            "</strong>" +
+                                            sendToDoor(
+                                                datas[i].door2Door,
+                                                datas[i].doorStatus,
+                                                datas[i].isDaDaOpen,
+                                                datas[i].dadaAgentCode,
+                                                datas[i].expressNo,
+                                                zoneId,
+                                                datas[i].userId,
+                                                datas[i].isLite
+                                            ) +
+                                            "</li>";
+                                        html +=
+                                            '<li><span class="justify">网点名称</span>： ' +
+                                            datas[i].nickName +
+                                            "";
+                                    } else if (type == 3) {
+                                        html +=
+                                            '<li><span class="justify">取件码</span><strong>： ' +
+                                            datas[i].checkCode.toString() +
+                                            '</strong><a class="cancel_send abright" href="javascript:;">取消配送</a></li>';
+                                        html +=
+                                            '<li><span class="justify">网点名称</span>： ' +
+                                            datas[i].nickName +
+                                            "";
+                                    }
+
+                                    if (type == 1 || type == 3) {
+                                        html +=
+                                            '<li><span class="justify">到店时间</span>： ' +
+                                            datas[i].receiveDate +
+                                            "</li>";
+                                    } else {
+                                        html +=
+                                            '<li><span class="justify">领取时间</span>： ' +
+                                            datas[i].tookDate +
+                                            "</li>";
+                                    }
+                                    html +=
+                                        '<li class="site-point" data-lati=' +
+                                        datas[i].latitude +
+                                        " data-longt=" +
+                                        datas[i].longitude +
+                                        " data-nickname=" +
+                                        datas[i].nickName +
+                                        " data-address=" +
+                                        datas[i].address4message +
+                                        " data-code=" +
+                                        datas[i].checkCode +
+                                        " data-mobile=" +
+                                        datas[i].telephone +
+                                        " data-iconurl=" +
+                                        datas[i].iconUrl +
+                                        '><span class="justify">取件地址</span>： <span class="icon-location"></span><span class="">' +
+                                        datas[i].address4message +
+                                        "</span></li>";
+                                    if (type == 1) {
+                                        html +=
+                                            '<li><span class="justify">类型-编号</span>： ' +
+                                            expressType(datas[i].expressSpec) +
+                                            datas[i].positionCode +
+                                            "</li>";
+                                    }
+                                    if (type == 3) {
+                                        html +=
+                                            '<li><span class="justify">配送时间</span>： ' +
+                                            datas[i].doorRemark.split("@")[0] +
+                                            "</li>";
+                                    }
+                                    if (type == 1 || type == 3) {
+                                        html +=
+                                            '<li style="display: none"><span class="justify">取件二维码</span>： <a href="javascript:" class="get-code underline_blue" data-code="' +
+                                            datas[i].checkCode.toString() +
+                                            '">点击获取</a></li>';
+                                    }
+                                    html +=
+                                        '<li><span class="justify">网点电话</span>： <a class="underline_blue" href="tel:' +
+                                        datas[i].telephone +
+                                        '">' +
+                                        datas[i].telephone +
+                                        "</a></li>";
+                                    if (type != 3) {
+                                        html +=
+                                            '<li><span class="justify">快递员电话</span>： <a class="underline_blue" href="tel:' +
+                                            datas[i].courierTel +
+                                            '">' +
+                                            datas[i].courierTel +
+                                            "</a></li>";
+                                    } else {
+                                        html +=
+                                            '<li class="remark"><span class="justify"><span>备</span><span>注</span></span><span class="colon">：</span><span class="remark_right"> ' +
+                                            datas[i].doorRemark.split("@")[1] +
+                                            "</span></li>";
+                                    }
+                                    html += "</ul>";
+                                    html += "</div>";
+                                }
+                                if (type == 1) {
+                                    $("#currentList").append(html);
+                                } else if (type == 2) {
+                                    $("#hisList").append(html);
+                                } else {
+                                    $("#waitList").append(html);
+                                }
+
+                                if (datas.length < 10) {
+                                    if (type == 1) {
+                                        $("#curMore").hide();
+                                        $(".nomore").show();
+                                    } else if (type == 2) {
+                                        $("#hisMore").hide();
+                                        $(".nomore").show();
+                                    } else {
+                                        $("#waitMore").hide();
+                                        $(".nomore").show();
+                                    }
+                                }
+                            }
+                        }
+                        // 22:00~08:00送件上门弹窗提示不能送件上门
+                        $(".send_to_door_tips").click(function () {
+                            showTip("22:00至次日8:00暂不支持配送下单", "确定");
+                        });
+                    }
+                    $(".loading").addClass("close");
+                    ++pageNum;
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    $(".loading").addClass("close");
+                }
+            });
+        }
+    }
+
+    function sendCheckCode(type) {
+        if (type == 1) {
+            mobile = $("#reBindMobile").val();
+        } else {
+            mobile = $("#otherMobile").val();
+        }
+        var param =
+            "mobile=" +
+            mobile +
+            "&openId=" +
+            openId +
+            "&type=" +
+            type +
+            "&noncestr=" +
+            noncestr +
+            "&timestamp=" +
+            timestamp;
+        console.log(param);
+
+        var xmlhttp;
+
+        if (window.XMLHttpRequest) xmlhttp = new XMLHttpRequest();
+        else xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+
+        xmlhttp.open(
+            "GET",
+            "http://sh.ulandian.com/weixin/express/sendMsgCheckCode4MyExpress.htm?" +
+            param,
+            true
+        );
+        xmlhttp.send();
+
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                if (xmlhttp.responseText.indexOf("验证异常-null") != -1) {
+                    showTip("验证异常，请退出后重新进入此页面尝试", "确定");
+                }
+            }
+        };
+    }
+
+    function submitCheckCode(type) {
+        var checkCode;
+        if (type == 1) {
+            mobile = $("#reBindMobile").val();
+            checkCode = $("#reBindCode").val();
+        } else {
+            mobile = $("#otherMobile").val();
+            checkCode = $("#otherCode").val();
+        }
+        var param =
+            "mobile=" +
+            mobile +
+            "&checkCode=" +
+            checkCode +
+            "&openId=" +
+            openId +
+            "&type=" +
+            type;
+
+        if (checkCode.length < 4) {
+            $(".alert").show();
+            $(".alert").html("请输入4位数验证码！");
+            return false;
+        }
+
+        var xmlhttp;
+
+        if (window.XMLHttpRequest) xmlhttp = new XMLHttpRequest();
+        else xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        if (type == 1) {
+            //改绑手机号
+            xmlhttp.open(
+                "POST",
+                "http://sh.ulandian.com/weixin/express/checkMyExpressMsgCode.htm",
+                true
+            );
+        } else {
+            xmlhttp.open(
+                "POST",
+                "http://sh.ulandian.com/weixin/express/checkMyExpressMsgCode.htm",
+                true
+            );
+        }
+        xmlhttp.setRequestHeader(
+            "Content-type",
+            "application/x-www-form-urlencoded"
+        );
+        xmlhttp.send(param);
+
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                if (xmlhttp.responseText.indexOf("成功") != -1) {
+                    if (type == 1) {
+                        //改绑成功
+                        curBtn
+                            .addClass("actived")
+                            .siblings("li")
+                            .removeClass("actived");
+                        his.hide();
+                        wait.hide();
+                        cur.show();
+                        $("#currentList").html("");
+                        pageNum = 1;
+                        getExpressList(openId, 1, pageNum);
+                        $(".dialogCon").hide();
+                        $(".nomore").hide();
+                        $(".alert").hide();
+                        $(".curMobile").html(mobile);
+                        showTip("绑定成功", "确定");
+                    } else {
+                        //查询其他手机快递验证成功
+                        console.log(curBtn);
+                        curBtn
+                            .addClass("actived")
+                            .siblings("li")
+                            .removeClass("actived");
+                        his.hide();
+                        wait.hide();
+                        cur.show();
+                        $("#currentList").html("");
+                        pageNum = 1;
+                        getExpressList(mobile, 1, pageNum);
+                        $(".dialogCon").hide();
+                        $(".curMobile").html(mobile);
+                        queryOther = 1; //1表示当前查询的是其他号码的快递
+                        $(".nomore").hide();
+                        $(".alert").hide();
+                        $(".fr").hide(); //查询其他手机，隐藏头部功能按钮
+                        showTip("验证成功", "确定");
+                    }
+                } else {
+                    $(".alert").show();
+                    $(".alert").html(xmlhttp.responseText);
+                }
+            }
+        };
+    }
+
+    // 获取url参数
+    function getUrlParams(key) {
+        var reg = new RegExp("(^|&)" + key + "=([^&]*)(&|$)");
+        var result = window.location.search.substr(1).match(reg);
+        return result ? decodeURIComponent(result[2]) : null;
+    }
+    //配送状态
+    function doorStatus(status) {
+        if (status == "D2D-APPLY") {
+            return "待配送";
+        } else if (status == "D2D-OK") {
+            return "已配送";
+        } else if (status == "D2D-CONFIRM") {
+            return "已送达，待确认";
+        } else if (status == "D2D-FAILURE") {
+            return "确认失败，等待处理";
+        } else {
+            return "";
+        }
+    }
+    //配送件状态
+    function toDoorStatus(status) {
+        if (status == 1) {
+            return "配送中";
+        } else if (status == 4) {
+            return "待确认";
+        } else if (status == 5) {
+            return "确认失败";
+        } else {
+            return "";
+        }
+    }
+    //送货上门显示
+    function sendToDoor(
+        status,
+        dstatus,
+        isDadaOpen,
+        dadaAgentCode,
+        expressNo,
+        zoneId,
+        userId,
+        isLite
+    ) {
+        //status - door2Door(商户)  dstatus - doorStatus(单间) isDaDaOpen (达达)
+        var curHour = new Date().getHours();
+        var params = {
+            expressNo: expressNo,
+            zoneId: zoneId,
+            mobile: mobile,
+            userId: userId
+        };
+        // status = false;
+        // isDadaOpen = true;
+        // dadaAgentCode = 11047059;
+        if (!status && isDadaOpen) {
+            params.dadaAgentCode = dadaAgentCode;
+        }
+        params = JSON.stringify(params);
+        params = Base64.encode(params);
+        window.sessionStorage.removeItem("EXPRESS_TO_DOOR_SESSION");
+        if (dstatus == "D2D-UNSUPORT") {
+            return "";
+        } else if (status) {
+            return (
+                "<a href='https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa1c8b98a356d0ada&redirect_uri=http://weixin.ulandian.com/wx_auth/express2doorV3_openid.html?params=" +
+                params +
+                "&response_type=code&scope=snsapi_base&connect_redirect=1#wechat_redirect' class='underline_blue send_to_door'>送件上门</a>"
+            );
+        } else if (isDadaOpen) {
+            if (curHour >= 8 && curHour < 22) {
+                return (
+                    "<a href='https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxa1c8b98a356d0ada&redirect_uri=http://weixin.ulandian.com/wx_auth/express2doorV3_openid.html?params=" +
+                    params +
+                    "&response_type=code&scope=snsapi_base&connect_redirect=1#wechat_redirect' class='underline_blue send_to_door'>送件上门</a>"
+                );
+            } else {
+                return "<a href='javascript:;' class='underline_blue send_to_door send_to_door_tips'>送件上门</a>";
+            }
+        } else {
+            return "";
+        }
+    }
+
+    function deliveryNote(note) {
+        if (note) {
+            return note;
+        } else {
+            return "无";
+        }
+    }
+    //包裹类型
+    function expressType(type) {
+        var types = {
+            A: "袋子-",
+            B: "大箱-",
+            C: "小箱-",
+            D: "其他-",
+            default: ""
+        };
+        return types[type] || types["default"];
+    }
+    var expessType = {
+        A: "袋子",
+        B: "大箱",
+        C: "小箱",
+        D: "其他"
+    };
+    //提示消息
+    function showTip(msg, btntxt) {
+        //提示消息,单个确定按钮
+        var $showTip = $("#showTip");
+        var $msg = $("#showTip p");
+        var $btn = $("#showTip .sure");
+        $msg.html(msg);
+        $btn.text(btntxt);
+        $showTip.fadeIn("fast");
+        $btn.on("click", function () {
+            $showTip.hide();
+            $("#dialogWrapper").hide();
+        });
+    }
+
+    function formatNum(nums) {
+        return nums < 10 ? "0" + nums : nums;
+    }
+    // 格式化时间
+    function timestampToTime(timestamp) {
+        var date = new Date(timestamp); //时间戳为10位需*1000，时间戳为13位的话不需乘1000
+        var Y = date.getFullYear() + "-";
+        var M =
+            (date.getMonth() + 1 < 10 ?
+                "0" + (date.getMonth() + 1) :
+                date.getMonth() + 1) + "-";
+        var D = date.getDate() + " ";
+        var h = date.getHours() + ":";
+        var m = date.getMinutes();
+        var s = date.getSeconds();
+        return Y + M + formatNum(D) + formatNum(h) + formatNum(m);
+    }
+</script>
+<script>
+    var signature = "";
+    var timestamp = "";
+    var noncestr = "";
+    var appId = "";
+    var url = location.href.split("#")[0];
+    $.ajax({
+        url: "http://weixin.ulandian.com/WeixinJssdkServlet",
+        type: "GET",
+        cache: false,
+        async: false,
+        data: {
+            url: url
+        },
+        success: function (data) {
+            if (data !== null && data !== "") {
+                var obj = JSON.parse(data);
+                signature = obj.signature;
+                timestamp = obj.timestamp;
+                appId = obj.appId;
+                noncestr = obj.noncestr;
+            }
+        },
+        error: function (data) {}
+    });
+    wx.config({
+        debug: false, // ¿ªÆôµ÷ÊÔÄ£Ê½,µ÷ÓÃµÄËùÓÐapiµÄ·µ»ØÖµ»áÔÚ¿Í»§¶Ëalert³öÀ´£¬ÈôÒª²é¿´´«ÈëµÄ²ÎÊý£¬¿ÉÒÔÔÚpc¶Ë´ò¿ª£¬²ÎÊýÐÅÏ¢»áÍ¨¹ýlog´ò³ö£¬½öÔÚpc¶ËÊ±²Å»á´òÓ¡¡£
+        appId: appId, // ±ØÌî£¬¹«ÖÚºÅµÄÎ¨Ò»±êÊ¶
+        timestamp: timestamp, // ±ØÌî£¬Éú³ÉÇ©ÃûµÄÊ±¼ä´Á
+        nonceStr: noncestr, // ±ØÌî£¬Éú³ÉÇ©ÃûµÄËæ»ú´®
+        signature: signature, // ±ØÌî£¬Ç©Ãû
+        jsApiList: []
+        // ±ØÌî£¬ÐèÒªÊ¹ÓÃµÄJS½Ó¿ÚÁÐ±í
+    });
+    wx.ready(function () {
+        wx.hideOptionMenu();
+        wx.error(function (res) {
+            // configÐÅÏ¢ÑéÖ¤Ê§°Ü»áÖ´ÐÐerrorº¯Êý£¬ÈçÇ©Ãû¹ýÆÚµ¼ÖÂÑéÖ¤Ê§°Ü
+        });
+    });
+</script>
+
+</html>
